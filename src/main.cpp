@@ -1,16 +1,62 @@
 #include <Arduino.h>
 
+//HX711
+#include <HX711.h>
+
+HX711 reader; 
+
+// HX711 circuit wiring
+const int LOADCELL_DOUT_PIN = PIN_PC0;
+const int LOADCELL_SCK_PIN = PIN_PC1;
+HX711 scale;
+
+//Servo
+#include <Servo.h>
+
+Servo servo1;
+Servo servo2;
+int pos1 = 0;    // variable to store the servo position
+int pos2 = 0;
+
+
+//LED test
 const int pinLED1 = PIN_PB0;
 const int pinLED2 = PIN_PB1;
 const int pinLED3 = PIN_PB5;
 
 void setup() {
+
+  //UART and HX711
+  Serial.begin(9600);
+  Serial.println("Hi");
+  scale.begin(LOADCELL_DOUT_PIN, LOADCELL_SCK_PIN);
+
+  //LED tests
   pinMode(pinLED1, OUTPUT);
   pinMode(pinLED2, OUTPUT);
   pinMode(pinLED3, OUTPUT);
+
+  //Servo
+  servo1.attach(PIN_PC2);  // Servo 2 
+  servo2.attach(PIN_PC3); // Servo 3 
 }
 
 void loop() {
+
+  //UART and HX711
+    Serial.println("Hello");
+
+  if (scale.wait_ready_timeout(1000)) {
+    long reading = scale.read();
+    Serial.print("HX711 reading: ");
+    Serial.println(reading);
+  } else {
+    Serial.println("HX711 not found.");
+  }
+
+  delay(1500);
+
+  //LED Tests
   digitalWrite(pinLED1, HIGH);
   delay(200);
   digitalWrite(pinLED2, HIGH);
@@ -25,13 +71,23 @@ void loop() {
   delay(200);
 
   // Servo
-  for (pos = 0; pos <= 180; pos += 1) { // goes from 0 degrees to 180 degrees
+  for (pos1 = 0; pos1 <= 180; pos1 += 1) { // goes from 0 degrees to 180 degrees
     // in steps of 1 degree
-    myservo.write(pos);              // tell servo to go to position in variable 'pos'
+    servo1.write(pos1);              // tell servo to go to position in variable 'pos'
     delay(15);                       // waits 15ms for the servo to reach the position
   }
-  for (pos = 180; pos >= 0; pos -= 1) { // goes from 180 degrees to 0 degrees
-    myservo.write(pos);              // tell servo to go to position in variable 'pos'
+  for (pos1 = 180; pos1 >= 0; pos1 -= 1) { // goes from 180 degrees to 0 degrees
+    servo1.write(pos1);              // tell servo to go to position in variable 'pos'
+    delay(15);                            // waits for the servo to get there
+  }
+
+  for (pos2 = 0; pos2 <= 180; pos2 += 1) { // goes from 0 degrees to 180 degrees
+    // in steps of 1 degree
+    servo2.write(pos2);              // tell servo to go to position in variable 'pos'
+    delay(15);                       // waits 15ms for the servo to reach the position
+  }
+  for (pos2 = 180; pos2 >= 0; pos2 -= 1) { // goes from 180 degrees to 0 degrees
+    servo2.write(pos2);              // tell servo to go to position in variable 'pos'
     delay(15);                            // waits for the servo to get there
   }
 }
