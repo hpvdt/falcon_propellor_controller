@@ -2,13 +2,14 @@
 
 //HX711
 #include <HX711.h>
-
-HX711 reader; 
+ 
 
 // HX711 circuit wiring
 const int LOADCELL_DOUT_PIN = PIN_PC0;
 const int LOADCELL_SCK_PIN = PIN_PC1;
 HX711 scale;
+
+byte gain;
 
 //Servo
 #include <Servo.h>
@@ -29,6 +30,9 @@ void setup() {
   //UART and HX711
   Serial.begin(9600);
   Serial.println("Hi");
+
+ 
+
   scale.begin(LOADCELL_DOUT_PIN, LOADCELL_SCK_PIN);
 
   //LED tests
@@ -44,17 +48,35 @@ void setup() {
 void loop() {
 
   //UART and HX711
-    Serial.println("Hello");
+
+  // Test on Channel A
+  gain = 128;
+  scale.set_gain(gain);  
+
+    Serial.println("Channel A");
 
   if (scale.wait_ready_timeout(1000)) {
     long reading = scale.read();
-    Serial.print("HX711 reading: ");
+    Serial.print("HX711 reading Channel A: ");
     Serial.println(reading);
   } else {
-    Serial.println("HX711 not found.");
+    Serial.println("HX711 Channel A not found.");
   }
 
   delay(1500);
+
+  // Test on Channel B
+  gain = 32;
+  scale.set_gain(gain);  
+
+  if (scale.wait_ready_timeout(1000)) {
+    long reading = scale.read();
+    Serial.print("HX711 reading Channel B: ");
+    Serial.println(reading);
+  } else {
+    Serial.println("HX711 Channel B not found.");
+  }
+
 
   //LED Tests
   digitalWrite(pinLED1, HIGH);
