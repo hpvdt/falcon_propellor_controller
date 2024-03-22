@@ -7,8 +7,9 @@
 #include <RF24.h>
 #include <SPI.h>
 
-#define CE_PIN 7
-#define CSN_PIN 8
+
+#define CE_PIN 3 //set based on chip
+#define CSN_PIN 8 //set based on chip
 
 // Let these addresses be used for the pair
 uint8_t address[][6] = { "1Node", "2Node" };
@@ -17,24 +18,24 @@ uint8_t address[][6] = { "1Node", "2Node" };
 
 // to use different addresses on a pair of radios, we need a variable to
 // uniquely identify which address this radio will use to transmit
-bool radioNumber = 1;  // 0 uses address[0] to transmit, 1 uses address[1] to transmit
-
-// Used to control whether this node is sending or receiving
-bool role = false;  // true = TX role, false = RX role
+bool radioNumber = 0;  // 0 uses address[0] to transmit, 1 uses address[1] to transmit
 
 // For this example, we'll be using a payload containing
 // a single float number that will be incremented
 // on every successful transmission
 float payload = 0.0;
 
-
+int MOSI_Pin = PIN_PA1;
+int MISO_Pin =PIN_PA2;
+int CLOCK = PIN_PA3;
 // instantiate an object for the nRF24L01 transceiver
-RF24 radio(CE_PIN, CSN_PIN);
+RF24 radio(PIN_PA6, PIN_PA4);
 
 
 // HX711 circuit wiring
 const int LOADCELL_DOUT_PIN = PIN_PC0;
 const int LOADCELL_SCK_PIN = PIN_PC1;
+
 long channel_A;
 long channel_B;
 
@@ -80,9 +81,8 @@ void setup() {
     Serial.println(F("radio hardware is not responding!!"));
     while (1) {}  // hold in infinite loop
   }
+  else Serial.println("Radio okay");
 
-    // role variable is hardcoded to RX behavior, inform the user of this
-  Serial.println(F("*** PRESS 'T' to begin transmitting to the other node"));
 
   // Set the PA Level low to try preventing power supply related problems
   // because these examples are likely run with nodes in close proximity to
@@ -93,11 +93,9 @@ void setup() {
   // number of bytes we need to transmit a float
   radio.setPayloadSize(sizeof(payload));  // float datatype occupies 4 bytes
 
-  // set the TX address of the RX node into the TX pipe
-  radio.openWritingPipe(address[radioNumber]);  // always uses pipe 0
-
   // set the RX address of the TX node into a RX pipe
   radio.openReadingPipe(1, address[!radioNumber]);  // using pipe 1
+  radio.startListening();  // put radio in RX mode
 
 }
 
@@ -107,31 +105,31 @@ void loop() {
 
   // Test on Channel A
   gain = 128;
-  scale.set_gain(gain);  
+  // scale.set_gain(gain);  
 
-    Serial.println("Channel A");
+  //   Serial.println("Channel A");
 
-  if (scale.wait_ready_timeout(10)) {
-    channel_A = scale.read();
-    Serial.print("HX711 reading Channel A: ");
-    Serial.println(channel_A);
-  } else {
-    Serial.println("HX711 Channel A not found.");
-  }
+  // if (scale.wait_ready_timeout(10)) {
+  //   channel_A = scale.read();
+  //   Serial.print("HX711 reading Channel A: ");
+  //   Serial.println(channel_A);
+  // } else {
+  //   Serial.println("HX711 Channel A not found.");
+  // }
 
-  delay(1.5);
+  // delay(1.5);
 
   // Test on Channel B
-  gain = 32;
-  scale.set_gain(gain);  
+  // gain = 32;
+  // scale.set_gain(gain);  
 
-  if (scale.wait_ready_timeout(10)) {
-    channel_B = scale.read();
-    Serial.print("HX711 reading Channel B: ");
-    Serial.println(channel_B);
-  } else {
-    Serial.println("HX711 Channel B not found.");
-  }
+  // if (scale.wait_ready_timeout(10)) {
+  //   channel_B = scale.read();
+  //   Serial.print("HX711 reading Channel B: ");
+  //   Serial.println(channel_B);
+  // } else {
+  //   Serial.println("HX711 Channel B not found.");
+  // }
 
  // This device is a RX node
 
@@ -139,35 +137,13 @@ void loop() {
     if (radio.available(&pipe)) {              // is there a payload? get the pipe number that recieved it
       uint8_t bytes = radio.getPayloadSize();  // get the size of the payload
       radio.read(&payload, bytes);             // fetch payload from FIFO
-      Serial.print(F("Received "));
-      Serial.print(bytes);  // print the size of the payload
-      Serial.print(F(" bytes on pipe "));
-      Serial.print(pipe);  // print the pipe number
-      Serial.print(F(": "));
-      Serial.println(payload);  // print the payload's value
+      //Serial.println(payload);  // print the payload's value
+      Serial.println("Hello");
+      delay(1000);
+
     }
     // role
   
-  if (Serial.available()) {
-  // change the role via the serial monitor
-
-    char c = toupper(Serial.read());
-    if (c == 'T' && !role) {
-      // Become the TX node
-
-      role = true;
-      Serial.println(F("*** CHANGING TO TRANSMIT ROLE -- PRESS 'R' TO SWITCH BACK"));
-      radio.stopListening();
-
-    } else if (c == 'R' && role) {
-      // Become the RX node
-
-      role = false;
-      Serial.println(F("*** CHANGING TO RECEIVE ROLE -- PRESS 'T' TO SWITCH BACK"));
-      radio.startListening();
-    }
-  
-  }
 }
 
 
