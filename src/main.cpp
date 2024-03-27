@@ -23,7 +23,7 @@ bool radioNumber = 0;  // 0 uses address[0] to transmit, 1 uses address[1] to tr
 // For this example, we'll be using a payload containing
 // a single float number that will be incremented
 // on every successful transmission
-float payload = 0.0;
+float receivedFloat = 0.0;
 
 int MOSI_Pin = PIN_PA1;
 int MISO_Pin =PIN_PA2;
@@ -31,6 +31,11 @@ int CLOCK = PIN_PA3;
 // instantiate an object for the nRF24L01 transceiver
 RF24 radio(PIN_PA6, PIN_PA4);
 
+// Make a data structure to store the entire payload of different datatypes
+struct PayloadStruct {
+  long readings[2];  // only using 6 characters for TX & ACK payloads
+};
+PayloadStruct response;
 
 // HX711 circuit wiring
 const int LOADCELL_DOUT_PIN = PIN_PC0;
@@ -91,12 +96,23 @@ void setup() {
 
   // save on transmission time by setting the radio to only transmit the
   // number of bytes we need to transmit a float
-  radio.setPayloadSize(sizeof(payload));  // float datatype occupies 4 bytes
+  radio.setPayloadSize(sizeof(receivedFloat));  // float datatype occupies 4 bytes
 
-  // set the RX address of the TX node into a RX pipe
+
+  // to use ACK payloads, we need to enable dynamic payload lengths (for all nodes)
+  radio.enableDynamicPayloads();  // ACK payloads are dynamically sized
+
+  // Acknowledgement packets have no payloads by default. We need to enable
+  // this feature for all nodes (TX & RX) to use ACK payloads.
+  radio.enableAckPayload();
+
+  // set the TX address of the RX node into the TX pipe
+  radio.openWritingPipe(address[radioNumber]);  // always uses pipe 0
+
   radio.openReadingPipe(1, address[!radioNumber]);  // using pipe 1
   radio.startListening();  // put radio in RX mode
 
+  digitalWrite(pinLED1, HIGH);
 }
 
 void loop() {
@@ -136,10 +152,16 @@ void loop() {
     uint8_t pipe;
     if (radio.available(&pipe)) {              // is there a payload? get the pipe number that recieved it
       uint8_t bytes = radio.getPayloadSize();  // get the size of the payload
-      radio.read(&payload, bytes);             // fetch payload from FIFO
-      //Serial.println(payload);  // print the payload's value
-      Serial.println("Hello");
-      delay(1000);
+      radio.read(&receivedFloat, bytes);             // fetch payload from FIFO
+      Serial.println(receivedFloat);  // print the payload's value
+      //Serial.println("Hello");
+      //delay(1000);
+
+      //Recieved 
+
+      Serial.println(response.readings[0]);    // print outgoing message
+      // load the payload for the first received transmission on pipe 0
+      radio.writeAckPayload(1, &response, sizeof(response));
 
     }
     // role
