@@ -66,8 +66,8 @@ void setup() {
 
   //UART and HX711
   Serial.begin(9600);
-
- 
+  delay(1000);
+  Serial.println("89");
 
   scale.begin(LOADCELL_DOUT_PIN, LOADCELL_SCK_PIN);
 
@@ -121,33 +121,37 @@ void loop() {
 
   // Test on Channel A
   gain = 128;
-  // scale.set_gain(gain);  
+  scale.set_gain(gain);  
 
-  //   Serial.println("Channel A");
+    Serial.println("Channel A");
 
-  // if (scale.wait_ready_timeout(10)) {
-  //   channel_A = scale.read();
-  //   Serial.print("HX711 reading Channel A: ");
-  //   Serial.println(channel_A);
-  // } else {
-  //   Serial.println("HX711 Channel A not found.");
-  // }
+  if (scale.wait_ready_timeout(10)) {
+    channel_A = scale.read();
+    Serial.print("HX711 reading Channel A: ");
+    Serial.println(channel_A);
+  } else {
+    Serial.println("HX711 Channel A not found.");
+  }
 
-  // delay(1.5);
+  delay(1.5);
 
-  // Test on Channel B
-  // gain = 32;
-  // scale.set_gain(gain);  
+ //Test on Channel B
+  gain = 32;
+  scale.set_gain(gain);  
 
-  // if (scale.wait_ready_timeout(10)) {
-  //   channel_B = scale.read();
-  //   Serial.print("HX711 reading Channel B: ");
-  //   Serial.println(channel_B);
-  // } else {
-  //   Serial.println("HX711 Channel B not found.");
-  // }
+  if (scale.wait_ready_timeout(10)) {
+    channel_B = scale.read();
+    Serial.print("HX711 reading Channel B: ");
+    Serial.println(channel_B);
+  } else {
+    Serial.println("HX711 Channel B not found.");
+  }
 
  // This device is a RX node
+// Set ack payload response to channel A and channel B readings
+ 
+    response.readings[0] = channel_A;
+    response.readings[1] = channel_B;
 
     uint8_t pipe;
     if (radio.available(&pipe)) {              // is there a payload? get the pipe number that recieved it
@@ -156,6 +160,7 @@ void loop() {
       Serial.println(receivedFloat);  // print the payload's value
       //Serial.println("Hello");
       //delay(1000);
+ 
 
       //Recieved 
 
