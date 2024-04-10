@@ -62,8 +62,23 @@ const int pinLED1 = PIN_PB0;
 const int pinLED2 = PIN_PB1;
 const int pinLED3 = PIN_PB5;
 
+// Table lookup
+int servoAngles[] = {15,17,19,21,23,25,27,29,31,33};
+     
 void setup() {
-
+  //Do you like flashing LEDs? Then UNCOMMENT THIS LED TEST!
+ digitalWrite(pinLED1, HIGH);
+ delay(20);
+ digitalWrite(pinLED2, HIGH);
+ delay(20);
+ digitalWrite(pinLED3, HIGH);
+ delay(20);
+ digitalWrite(pinLED1, LOW);
+ delay(20);
+ digitalWrite(pinLED2, LOW);
+ delay(20);
+  digitalWrite(pinLED3, LOW);
+ delay(20);
   //UART and HX711
   Serial.begin(9600);
   delay(1000);
@@ -169,27 +184,22 @@ void loop() {
       radio.writeAckPayload(1, &response, sizeof(response));
 
     }
-    // role
+
+  // Next step : Set up linear interpolation code to determine servo positions
+ getServoAngle(0.5);
+}
+
+float getServoAngle(float angle){
+  int index = angle*2;
+  return angles[index];
+  // Interpolation code
   
+
 }
 
 
 
-  //LED Tests
- // digitalWrite(pinLED1, HIGH);
- // delay(20);
- // digitalWrite(pinLED2, HIGH);
- // delay(20);
- // digitalWrite(pinLED3, HIGH);
- // delay(20);
- // digitalWrite(pinLED1, LOW);
- // delay(20);
- // digitalWrite(pinLED2, LOW);
- // delay(20);
-  //digitalWrite(pinLED3, LOW);
- // delay(20);
-
-  // Servo
+  // Servo Stuff 
 //   for (pos1 = 0; pos1 <= 180; pos1 += 1) { // goes from 0 degrees to 180 degrees
 //     // in steps of 1 degree
 //     servo1.write(pos1);              // tell servo to go to position in variable 'pos'
