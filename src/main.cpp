@@ -64,7 +64,13 @@ const int pinLED3 = PIN_PB5;
 
 // Table lookup
 int servoAngles[] = {15,17,19,21,23,25,27,29,31,33};
-     
+float getServoAngle(float angle){
+  int index = angle*2;
+  return servoAngles[index];
+  // Interpolation code
+
+
+} 
 void setup() {
   //Do you like flashing LEDs? Then UNCOMMENT THIS LED TEST!
  digitalWrite(pinLED1, HIGH);
@@ -189,13 +195,7 @@ void loop() {
  getServoAngle(0.5);
 }
 
-float getServoAngle(float angle){
-  int index = angle*2;
-  return angles[index];
-  // Interpolation code
-  
 
-}
 
 
 
