@@ -61,14 +61,34 @@ const int pinLED2 = PIN_PB1;
 const int pinLED3 = PIN_PB5;
 
 // Table lookup
-int servoAngles[] = {15,17,19,21,23,25,27,29,31,33};
-float getServoAngle(float angle){
-  int index = angle*2;
-  return servoAngles[index];
-  // Interpolation code
+const float CONTROL_ANGLES[]      = { 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0};
+const unsigned int SERVO_ANGLES[] = {  15,  17,  19,  21,  23,  25,  27,  29,  31,  33};
+const int NUMBER_OF_ANGLES = sizeof(CONTROL_ANGLES) / sizeof(CONTROL_ANGLES[0]);
 
+unsigned int getServoAngle(float desiredControlAngle) {
+  // Ensure it's valid and clamped
+  if (isnan(desiredControlAngle)) desiredControlAngle = 0;
+  if (desiredControlAngle <= CONTROL_ANGLES[0]) return SERVO_ANGLES[0];
+  if (desiredControlAngle >= CONTROL_ANGLES[NUMBER_OF_ANGLES - 1]) return SERVO_ANGLES[NUMBER_OF_ANGLES - 1];
 
-} 
+  unsigned int interpolated = 90; // Value to interpolate from lookup table, defaults to mid-range
+  
+  // Interpolate
+  for (int i = 1; i < (NUMBER_OF_ANGLES - 1); i++) {
+    if (CONTROL_ANGLES[i] > desiredControlAngle) {
+      // Interpolate in this bracket
+      const float dx = CONTROL_ANGLES[i] - CONTROL_ANGLES[i - 1];
+      const float dy = SERVO_ANGLES[i] - SERVO_ANGLES[i - 1];
+      const float portion = (desiredControlAngle - CONTROL_ANGLES[i - 1]) / dx;
+
+      interpolated = SERVO_ANGLES[i - 1] + (dy * portion);
+      break;
+    }
+  }
+
+  return interpolated;
+}
+
 void setup() {
 
   //UART and HX711
@@ -126,6 +146,8 @@ void setup() {
   radio.openReadingPipe(1, address[!radioNumber]);  // using pipe 1
   radio.startListening();  // put radio in RX mode
 
+  radio.writeAckPayload(1, &response, sizeof(response)); // Initial dummy response to serve
+
   digitalWrite(pinLED1, HIGH);
 }
 
@@ -168,8 +190,9 @@ void loop() {
     // load the payload for the first received transmission on pipe 0
     radio.writeAckPayload(1, &response, sizeof(response));
 
+    // Update servos with newest angle
+    unsigned int angle = getServoAngle(receivedFloat);
+    servo1.write(angle);
+    servo2.write(angle);
   }
-
-  // Next step : Set up linear interpolation code to determine servo positions
-  getServoAngle(0.5);
 }
