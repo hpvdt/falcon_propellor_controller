@@ -25,8 +25,8 @@ bool radioNumber = 0;  // 0 uses address[0] to transmit, 1 uses address[1] to tr
 // on every successful transmission
 float receivedFloat = 0.0;
 
-int MOSI_Pin = PIN_PA1;
-int MISO_Pin =PIN_PA2;
+int MOSI_PIN = PIN_PA1;
+int MISO_PIN =PIN_PA2;
 int CLOCK = PIN_PA3;
 // instantiate an object for the nRF24L01 transceiver
 RF24 radio(PIN_PA6, PIN_PA4);
@@ -46,16 +46,13 @@ long channel_B;
 
 HX711 scale;
 
-byte gain;
-
 //Servo
 #include <Servo.h>
 
 Servo servo1;
 Servo servo2;
-int pos1 = 0;    // variable to store the servo position
-int pos2 = 0;
-
+const int SERVO1_PIN = PIN_PC2;
+const int SERVO2_PIN = PIN_PC3;
 
 //LED test
 const int pinLED1 = PIN_PB0;
@@ -99,8 +96,8 @@ void setup() {
   delay(20);
 
   //Servo
-  servo1.attach(PIN_PC2); 
-  servo2.attach(PIN_PC3); 
+  servo1.attach(SERVO1_PIN); 
+  servo2.attach(SERVO2_PIN); 
 
   // RF 24
 
@@ -175,29 +172,3 @@ void loop() {
   // Next step : Set up linear interpolation code to determine servo positions
   getServoAngle(0.5);
 }
-
-
-
-
-
-  // Servo Stuff 
-//   for (pos1 = 0; pos1 <= 180; pos1 += 1) { // goes from 0 degrees to 180 degrees
-//     // in steps of 1 degree
-//     servo1.write(pos1);              // tell servo to go to position in variable 'pos'
-//     delay(15);                       // waits 15ms for the servo to reach the position
-//   }
-//   for (pos1 = 180; pos1 >= 0; pos1 -= 1) { // goes from 180 degrees to 0 degrees
-//     servo1.write(pos1);              // tell servo to go to position in variable 'pos'
-//     delay(15);                            // waits for the servo to get there
-//   }
-
-//   for (pos2 = 0; pos2 <= 180; pos2 += 1) { // goes from 0 degrees to 180 degrees
-//     // in steps of 1 degree
-//     servo2.write(pos2);              // tell servo to go to position in variable 'pos'
-//     delay(15);                       // waits 15ms for the servo to reach the position
-//   }
-//   for (pos2 = 180; pos2 >= 0; pos2 -= 1) { // goes from 180 degrees to 0 degrees
-//     servo2.write(pos2);              // tell servo to go to position in variable 'pos'
-//    delay(15);                            // waits for the servo to get there
-//  }
-//}
