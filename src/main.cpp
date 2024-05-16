@@ -40,6 +40,7 @@ PayloadStruct response;
 // HX711 circuit wiring
 const int LOADCELL_DOUT_PIN = PIN_PC0;
 const int LOADCELL_SCK_PIN = PIN_PC1;
+const int GAUGE_TIMEOUT = 10; // Timeout in ms for waiting for strain gauge data
 
 long channel_A;
 long channel_B;
@@ -54,7 +55,7 @@ Servo servo2;
 const int SERVO1_PIN = PIN_PC2;
 const int SERVO2_PIN = PIN_PC3;
 
-//LED test
+// LED pins
 const int pinLED1 = PIN_PB0;
 const int pinLED2 = PIN_PB1;
 const int pinLED3 = PIN_PB5;
@@ -134,7 +135,7 @@ void loop() {
 
   scale.set_gain(32); // Set HX711 to read channel B after this read
   Serial.println("Channel A");
-  if (scale.wait_ready_timeout(10)) {
+  if (scale.wait_ready_timeout(GAUGE_TIMEOUT)) {
     channel_A = scale.read();
     Serial.print("HX711 reading Channel A: ");
     Serial.println(channel_A);
@@ -143,7 +144,7 @@ void loop() {
   }
   // Read on Channel B
   scale.set_gain(128); // Set HX711 to read channel A after this read
-  if (scale.wait_ready_timeout(10)) {
+  if (scale.wait_ready_timeout(GAUGE_TIMEOUT)) {
     channel_B = scale.read();
     Serial.print("HX711 reading Channel B: ");
     Serial.println(channel_B);
