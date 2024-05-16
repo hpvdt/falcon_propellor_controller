@@ -72,23 +72,10 @@ float getServoAngle(float angle){
 
 } 
 void setup() {
-  //Do you like flashing LEDs? Then UNCOMMENT THIS LED TEST!
- digitalWrite(pinLED1, HIGH);
- delay(20);
- digitalWrite(pinLED2, HIGH);
- delay(20);
- digitalWrite(pinLED3, HIGH);
- delay(20);
- digitalWrite(pinLED1, LOW);
- delay(20);
- digitalWrite(pinLED2, LOW);
- delay(20);
-  digitalWrite(pinLED3, LOW);
- delay(20);
+
   //UART and HX711
   Serial.begin(9600);
   delay(1000);
-  Serial.println("89");
 
   scale.begin(LOADCELL_DOUT_PIN, LOADCELL_SCK_PIN);
 
@@ -97,9 +84,23 @@ void setup() {
   pinMode(pinLED2, OUTPUT);
   pinMode(pinLED3, OUTPUT);
 
+  //Do you like flashing LEDs? Then UNCOMMENT THIS LED TEST!
+  digitalWrite(pinLED1, HIGH);
+  delay(20);
+  digitalWrite(pinLED2, HIGH);
+  delay(20);
+  digitalWrite(pinLED3, HIGH);
+  delay(20);
+  digitalWrite(pinLED1, LOW);
+  delay(20);
+  digitalWrite(pinLED2, LOW);
+  delay(20);
+  digitalWrite(pinLED3, LOW);
+  delay(20);
+
   //Servo
-  servo1.attach(PIN_PC2);  // Servo 2 
-  servo2.attach(PIN_PC3); // Servo 3 
+  servo1.attach(PIN_PC2); 
+  servo2.attach(PIN_PC3); 
 
   // RF 24
 
@@ -110,15 +111,9 @@ void setup() {
   else Serial.println("Radio okay");
 
 
-  // Set the PA Level low to try preventing power supply related problems
-  // because these examples are likely run with nodes in close proximity to
-  // each other.
   radio.setPALevel(RF24_PA_HIGH);  // RF24_PA_MAX is default.
 
-  // save on transmission time by setting the radio to only transmit the
-  // number of bytes we need to transmit a float
   radio.setPayloadSize(sizeof(receivedFloat));  // float datatype occupies 4 bytes
-
 
   // to use ACK payloads, we need to enable dynamic payload lengths (for all nodes)
   radio.enableDynamicPayloads();  // ACK payloads are dynamically sized
@@ -138,14 +133,10 @@ void setup() {
 
 void loop() {
 
-  //UART and HX711
+  // UART and HX711
 
-  // Test on Channel A
-  gain = 128;
-  scale.set_gain(gain);  
-
-    Serial.println("Channel A");
-
+  scale.set_gain(32); // Set HX711 to read channel B after this read
+  Serial.println("Channel A");
   if (scale.wait_ready_timeout(10)) {
     channel_A = scale.read();
     Serial.print("HX711 reading Channel A: ");
@@ -153,13 +144,8 @@ void loop() {
   } else {
     Serial.println("HX711 Channel A not found.");
   }
-
-  delay(1.5);
-
- //Test on Channel B
-  gain = 32;
-  scale.set_gain(gain);  
-
+  // Read on Channel B
+  scale.set_gain(128); // Set HX711 to read channel A after this read
   if (scale.wait_ready_timeout(10)) {
     channel_B = scale.read();
     Serial.print("HX711 reading Channel B: ");
@@ -168,31 +154,26 @@ void loop() {
     Serial.println("HX711 Channel B not found.");
   }
 
- // This device is a RX node
-// Set ack payload response to channel A and channel B readings
+  // This device is a RX node
+  // Set ack payload response to channel A and channel B readings
  
-    response.readings[0] = channel_A;
-    response.readings[1] = channel_B;
+  response.readings[0] = channel_A;
+  response.readings[1] = channel_B;
 
-    uint8_t pipe;
-    if (radio.available(&pipe)) {              // is there a payload? get the pipe number that recieved it
-      uint8_t bytes = radio.getPayloadSize();  // get the size of the payload
-      radio.read(&receivedFloat, bytes);             // fetch payload from FIFO
-      Serial.println(receivedFloat);  // print the payload's value
-      //Serial.println("Hello");
-      //delay(1000);
- 
+  uint8_t pipe;
+  if (radio.available(&pipe)) {              // is there a payload? get the pipe number that recieved it
+    uint8_t bytes = radio.getPayloadSize();  // get the size of the payload
+    radio.read(&receivedFloat, bytes);             // fetch payload from FIFO
+    Serial.println(receivedFloat);  // print the payload's value
 
-      //Recieved 
+    Serial.println(response.readings[0]);    // print outgoing message
+    // load the payload for the first received transmission on pipe 0
+    radio.writeAckPayload(1, &response, sizeof(response));
 
-      Serial.println(response.readings[0]);    // print outgoing message
-      // load the payload for the first received transmission on pipe 0
-      radio.writeAckPayload(1, &response, sizeof(response));
-
-    }
+  }
 
   // Next step : Set up linear interpolation code to determine servo positions
- getServoAngle(0.5);
+  getServoAngle(0.5);
 }
 
 
