@@ -7,10 +7,6 @@
 #include <RF24.h>
 #include <SPI.h>
 
-
-#define CE_PIN 3 //set based on chip
-#define CSN_PIN 8 //set based on chip
-
 // Let these addresses be used for the pair
 uint8_t address[][6] = { "1Node", "2Node" };
 // It is very helpful to think of an address as a path instead of as
@@ -25,22 +21,24 @@ bool radioNumber = 0;  // 0 uses address[0] to transmit, 1 uses address[1] to tr
 // on every successful transmission
 float receivedFloat = 0.0;
 
-int MOSI_PIN = PIN_PA1;
-int MISO_PIN =PIN_PA2;
-int CLOCK = PIN_PA3;
-// instantiate an object for the nRF24L01 transceiver
-RF24 radio(PIN_PA6, PIN_PA4);
+// Instantiate an object for the nRF24L01 transceiver
+const pin_size_t CE_PIN = PIN_PA6;
+const pin_size_t CSN_PIN = PIN_PA4;
+const pin_size_t MOSI_PIN = PIN_PA1;
+const pin_size_t MISO_PIN = PIN_PA2;
+const pin_size_t CLOCK = PIN_PA3;
+RF24 radio(CE_PIN, CSN_PIN);
 
 // Make a data structure to store the entire payload of different datatypes
 struct PayloadStruct {
-  long readings[2];  // only using 6 characters for TX & ACK payloads
+  long readings[2];
 };
 PayloadStruct response;
 
 // HX711 circuit wiring
-const int LOADCELL_DOUT_PIN = PIN_PC0;
-const int LOADCELL_SCK_PIN = PIN_PC1;
-const int GAUGE_TIMEOUT = 10; // Timeout in ms for waiting for strain gauge data
+const pin_size_t LOADCELL_DOUT_PIN = PIN_PC0;
+const pin_size_t LOADCELL_SCK_PIN = PIN_PC1;
+const pin_size_t GAUGE_TIMEOUT = 10; // Timeout in ms for waiting for strain gauge data
 
 long channel_A;
 long channel_B;
@@ -52,13 +50,13 @@ HX711 scale;
 
 Servo servo1;
 Servo servo2;
-const int SERVO1_PIN = PIN_PC2;
-const int SERVO2_PIN = PIN_PC3;
+const pin_size_t SERVO1_PIN = PIN_PC2;
+const pin_size_t SERVO2_PIN = PIN_PC3;
 
 // LED pins
-const int pinLED1 = PIN_PB0;
-const int pinLED2 = PIN_PB1;
-const int pinLED3 = PIN_PB5;
+const pin_size_t pinLED1 = PIN_PB0;
+const pin_size_t pinLED2 = PIN_PB1;
+const pin_size_t pinLED3 = PIN_PB5;
 
 // Table lookup
 const float CONTROL_ANGLES[]      = { 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0};
@@ -130,8 +128,6 @@ void setup() {
 
 
   radio.setPALevel(RF24_PA_HIGH);  // RF24_PA_MAX is default.
-
-  radio.setPayloadSize(sizeof(receivedFloat));  // float datatype occupies 4 bytes
 
   // to use ACK payloads, we need to enable dynamic payload lengths (for all nodes)
   radio.enableDynamicPayloads();  // ACK payloads are dynamically sized
